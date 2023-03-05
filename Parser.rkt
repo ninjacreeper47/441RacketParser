@@ -1,2 +1,3 @@
 #lang racket
-(print "hello world")
+(define (readfile name)
+ (file->lines name))
