@@ -20,8 +20,9 @@
                       (with-handlers ([exn:fail? ;Catches an error and appends the line number, then rethrows the error
                                        ;TODO: find the name of the error being caught
                                     (lambda (exn) (string-append "Error on line " (number->string linenum)))])  
-                      (map Scan thisline<list>)
-                      (CheckNext (rest program)))))))))))
+                      (if(programline(map Scan thisline<list>))
+                      (CheckNext (rest program))
+                      (error "Invalid line")))))))))))
 
 
 
@@ -125,6 +126,8 @@
      #f))
 (define (numsign stream)
   (cond
+    [(empty? stream)
+     stream]
     [(op+ stream)
      (op+ stream)]
     [(op- stream)
@@ -136,6 +139,8 @@
 
 (define (etail stream)
   (cond
+    [(empty? stream)
+     stream]
     [(op+ stream)
      (expr(op+ stream))]
     [(op- stream)
@@ -154,12 +159,12 @@
      (opRP(expr(opLP stream)))]
     [else #f]))
   
-(define (statement stream)
+(define (stmt stream)
   (cond
    [(id stream)
      (expr(op=(id stream))) ]
    [(key:if stream)
-    (statement(key:then(expr(key:if stream))))]
+    (stmt(key:then(expr(key:if stream))))]
    [(key:read stream)
     (id(key:read stream))]
    [(key:write stream)
@@ -171,4 +176,10 @@
    [(key:return stream)
     (key:return stream)]
     [else #f]))
-    
+
+(define (programline stream) ;Note linenumbers are checked in the parse function
+  (if(empty? (stmt stream))
+     #t
+     (if (op:(stmt stream))
+         (programline (op:(stmt  stream)))
+         #f)))
