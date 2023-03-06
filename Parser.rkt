@@ -1,4 +1,6 @@
 #lang racket
+
+;Known limitations: all tokens must be seperated by whitespace. Does not check for nonzero leading digits in any numbers.  
 (define (parse name)
  (CheckNext(file->lines name)))
 
@@ -20,7 +22,7 @@
                       (with-handlers ([exn:fail? ;Catches an error and appends the line number, then rethrows the error
                                        ;TODO: find the name of the error being caught
                                     (lambda (exn) (string-append "Error on line " (number->string linenum)))])  
-                      (if(programline(map Scan thisline<list>))
+                      (if(programline (rest(map Scan thisline<list>)))
                       (CheckNext (rest program))
                       (error "Invalid line")))))))))))
 
