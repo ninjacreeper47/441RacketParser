@@ -1,5 +1,4 @@
 #lang racket
-(require racket/exn)
 (define (parse name)
  (CheckNext(file->lines name)))
 
@@ -28,6 +27,7 @@
 
 (define (Scan token)
   (cond
+    ;TODO passback actual number in order to implment idx and num checking
     [(string->number token) 'number]
     ;Keywords
     [(equal?  "if" token ) 'if ]
@@ -54,5 +54,121 @@
   (println(Scan token))
   (Scan token)) 
   
+
+
+;TODO check for leading 0 digits
+(define (idx stream)
+  (if(equal? (first stream)'number)
+     (rest stream)
+     #f))
+
+(define (id stream)
+  (if(equal? (first stream) 'letters)
+     (rest stream)
+     #f))
+ (define (op= stream)
+  (if(equal? (first stream) '=)
+     (rest stream)
+     #f))
+(define (op+ stream)
+  (if(equal? (first stream) '+)
+     (rest stream)
+     #f))
+(define (op- stream)
+  (if(equal? (first stream) '-)
+     (rest stream)
+     #f))
+(define (opLP stream)
+  (if(equal? (first stream) 'LeftParenthesis)
+     (rest stream)
+     #f))
+(define (opRP stream)
+  (if(equal? (first stream) 'RightParenthesis)
+     (rest stream)
+     #f))
+(define (op: stream)
+  (if(equal? (first stream) ':)
+     (rest stream)
+     #f))
+(define (key:if stream)
+  (if(equal? (first stream) 'if)
+     (rest stream)
+     #f))
+(define (key:then stream)
+  (if(equal? (first stream) 'then)
+     (rest stream)
+     #f))
+(define (key:read stream)
+  (if(equal? (first stream) 'read)
+     (rest stream)
+     #f))
+(define (key:write stream)
+  (if(equal? (first stream) 'write)
+     (rest stream)
+     #f))
+(define (key:goto stream)
+  (if(equal? (first stream) 'goto)
+     (rest stream)
+     #f))
+(define (key:gosub stream)
+  (if(equal? (first stream) 'gosub)
+     (rest stream)
+     #f))
+(define (key:return stream)
+  (if(equal? (first stream) 'return)
+     (rest stream)
+     #f))
+
+(define (digits stream)
+  (if(equal? (first stream) 'number)
+     (rest stream)
+     #f))
+(define (numsign stream)
+  (cond
+    [(op+ stream)
+     (op+ stream)]
+    [(op- stream)
+     (op- stream)]
+    [else stream]))
+
+(define (num stream)
+  (digits(numsign stream)))
+
+(define (etail stream)
+  (cond
+    [(op+ stream)
+     (expr(op+ stream))]
+    [(op- stream)
+    (expr(op- stream))]
+    [(op= stream)
+     (expr(op= stream))]
+    [else stream]))
+
+(define (expr stream)
+  (cond
+    [(id stream)
+     (etail(id stream))]
+    [(num stream)
+     (etail(num stream))]
+    [(opLP stream)
+     (opRP(expr(opLP stream)))]
+    [else #f]))
   
-  
+(define (statement stream)
+  (cond
+   [(id stream)
+     (expr(op=(id stream))) ]
+   [(key:if stream)
+    (statement(key:then(expr(key:if stream))))]
+   [(key:read stream)
+    (id(key:read stream))]
+   [(key:write stream)
+    (expr(key:write stream))]
+   [(key:goto stream)
+    (idx(key:goto stream))]
+   [(key:gosub stream)
+    (idx(key:gosub stream))]
+   [(key:return stream)
+    (key:return stream)]
+    [else #f]))
+    
